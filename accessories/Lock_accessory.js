@@ -25,7 +25,7 @@ var FAKE_LOCK = {
 var lockUUID = uuid.generate('hap-nodejs:accessories:lock');
 
 // This is the Accessory that we'll return to HAP-NodeJS that represents our fake lock.
-var lock = exports.accessory = new Accessory('Lock', lockUUID);
+var lock = exports.accessory = new Accessory('RaffieLock', lockUUID);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
 lock.username = "C1:5D:3A:EE:5E:FA";
