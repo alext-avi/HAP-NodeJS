@@ -72,13 +72,8 @@ var lightUUID = uuid.generate('hap-nodejs:accessories:light' + LightController.n
 var lightAccessory = exports.accessory = new Accessory(LightController.name, lightUUID);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
-<<<<<<< HEAD
-light.username = "1F:2E:3D:4C:5B:6A";
-light.pincode = "775-45-464";
-=======
 lightAccessory.username = LightController.username;
 lightAccessory.pincode = LightController.pincode;
->>>>>>> KhaosT/master
 
 // set some basic properties (these values are arbitrary and setting them is optional)
 lightAccessory

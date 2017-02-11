@@ -2,32 +2,64 @@ var Accessory = require('../').Accessory;
 var Service = require('../').Service;
 var Characteristic = require('../').Characteristic;
 var uuid = require('../').uuid;
+var Mopidy = require('mopidy');
+var PlaylistHelper = require('../mopidy/playlist_helper').PlaylistHelper;
 
+var mopidy = new Mopidy({
+    webSocketUrl: "ws://blackberrycake:6680/mopidy/ws/"
+});
+
+
+var playlisthelper = new PlaylistHelper(mopidy);
 
 // here's a fake hardware device that we'll expose to HomeKit
 var FAKE_FAN = {
-  powerOn: false,
+  powerOn: true,
   rSpeed: 100,
   setPowerOn: function(on) {
+    //mopidy.playlists.asList().done(receivePlaylists);
+    
+    
     if(on){
       //put your code here to turn on the fan
+      if(!FAKE_FAN.powerOn)
+      {
+        playlisthelper.queueAndPlay("ROCK A BYE BABY (by 1166790265)");
+      }
       FAKE_FAN.powerOn = on;
     }
     else{
       //put your code here to turn off the fan
       FAKE_FAN.powerOn = on;
+      mopidy.playback.stop();
     }
   },
   setSpeed: function(value) {
     console.log("Setting fan rSpeed to %s", value);
     FAKE_FAN.rSpeed = value;
+     mopidy.mixer.setVolume(FAKE_FAN.rSpeed)
     //put your code here to set the fan to a specific value
   },
   identify: function() {
     //put your code here to identify the fan
     console.log("Fan Identified!");
+
+    console.log(mopidy.playback.getState());
   }
 }
+
+var initializeFanState = function() {
+  mopidy.mixer.getVolume().done(FAKE_FAN.setSpeed);
+}
+
+var handleTrackStarted = function(object) {
+  console.log("Now Playing: " + object.tl_track.track.name);
+}
+
+mopidy.on("state:online", initializeFanState);
+mopidy.on("event:trackPlaybackStarted", handleTrackStarted);
+
+
 
 // This is the Accessory that we'll return to HAP-NodeJS that represents our fake fan.
 var fan = exports.accessory = new Accessory('Fan', uuid.generate('hap-nodejs:accessories:Fan'));

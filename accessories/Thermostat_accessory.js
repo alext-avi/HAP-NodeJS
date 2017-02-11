@@ -117,8 +117,8 @@ exports.accessory = {
       supportEvents: false,
       supportBonjour: false,
       manfDescription: "Target Temperature",
-      designedMinValue: 16,
-      designedMaxValue: 38,
+      designedMinValue: 0,
+      designedMaxValue: 60,
       designedMinStep: 1,
       unit: "celsius"
     },{
