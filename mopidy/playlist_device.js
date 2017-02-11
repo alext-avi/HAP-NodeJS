@@ -1,6 +1,8 @@
 var Mopidy = require('mopidy');
 var PlaylistHelper = require('../mopidy/playlist_helper').PlaylistHelper;
 
+module.exports.PlaylistDevice = PlaylistDevice;
+
 var mopidy = new Mopidy({
     webSocketUrl: "ws://blackberrycake:6680/mopidy/ws/"
 });
@@ -8,43 +10,63 @@ var mopidy = new Mopidy({
 
 var playlisthelper = new PlaylistHelper(mopidy);
 
-// here's a fake hardware device that we'll expose to HomeKit
-var PlaylistDevice = function(){
-    powerOn = false;
-    rSpeed = 100;
 
-    var initializeFanState = function() {
-        mopidy.mixer.getVolume().done(FAKE_FAN.setSpeed);
+// here's a fake hardware device that we'll expose to HomeKit
+function PlaylistDevice (playlistName){
+    this.playlist = playlistName;
+    this.powerOn = false;
+    this.volume = 100;
+
+    var initialize = function() {
+        mopidy.mixer.getVolume().done(this.initVolume);
     }
 
     var handleTrackStarted = function(object) {
         console.log("Now Playing: " + object.tl_track.track.name);
     }
 
-    mopidy.on("state:online", initializeFanState);
+    var handleTrackStopped = function(object) {
+        console.log("Track stopped: " + object.tl_track.track.name);
+        //this.powerOn = false;
+    }
+
+    var handlePlaylistChanged = function(object) {
+        console.log("Playlist stopped: " + object);
+        this.powerOn = false;
+    }
+
+    mopidy.on("state:online", initialize);
     mopidy.on("event:trackPlaybackStarted", handleTrackStarted);
+    mopidy.on("event:trackPlaybackEnded", handleTrackStopped);
+    mopidy.on("event:playlistChanged", handlePlaylistChanged);
+    //mopidy.on(console.log.bind(console));
 }
 
 PlaylistDevice.prototype.setPowerOn = function(on) {
     if(on){
         //put your code here to turn on the fan
-        if(!FAKE_FAN.powerOn)
+        if(!this.powerOn)
         {
-        playlisthelper.queueAndPlay("ROCK A BYE BABY (by 1166790265)");
+        playlisthelper.queueAndPlay(this.playlist);
         }
-        FAKE_FAN.powerOn = on;
+        this.powerOn = on;
     }
     else{
         //put your code here to turn off the fan
-        FAKE_FAN.powerOn = on;
+        this.powerOn = on;
         mopidy.playback.stop();
     }
 };
 
-PlaylistDevice.prototype.setSpeed = function(value) {
+PlaylistDevice.prototype.initVolume = function(value) {
 console.log("Setting fan rSpeed to %s", value);
-    this.rSpeed = value;
-    mopidy.mixer.setVolume(FAKE_FAN.rSpeed)
+    this.volume = value;
+};
+
+PlaylistDevice.prototype.setVolume = function(value) {
+console.log("Setting fan rSpeed to %s", value);
+    this.volume = value;
+    mopidy.mixer.setVolume(this.volume)
 };
 
 PlaylistDevice.prototype.identify = function() {
